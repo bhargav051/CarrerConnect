@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
     emailId: {
         type: String,
         required: true,
-        unique: true,
+        unique: true, // making a field unique automatically creates a index for that field
         lowercase: true,
         trim: true
     },
@@ -71,6 +71,7 @@ userSchema.methods.validatePassword = async function (passwordInputByUser) {
     const isPasswordValid = await bcrypt.compare(passwordInputByUser, passwordHash);
     return isPasswordValid;
 }
+
 
 const User = mongoose.model("User",userSchema);
 
