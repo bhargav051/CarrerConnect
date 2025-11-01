@@ -25,8 +25,6 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
             throw new Error("Invalid edit request");
         }
 
-        console.log("Validation passed ✅");
-
         const user = req.user;
 
         // Update user fields dynamically

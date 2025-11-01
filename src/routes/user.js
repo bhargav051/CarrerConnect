@@ -13,8 +13,8 @@ userRouter.get("/user/requests", userAuth, async (req,res) => {
         const connectionRequests = await ConnectionRequest.find({
             toUserId: loggedInUser._id,
             status:"interested"
-        }).populate("fromUserId",["firstName","lastName","age","gender","about","skills"]);
-
+        }).populate("fromUserId",["firstName","lastName","age","gender","about","skills","photoUrl"]);
+ 
         res.json({
             meessage: "connection requests Fetch successfully !!",
             data: connectionRequests
@@ -34,8 +34,8 @@ userRouter.get("/user/connections", userAuth, async (req,res) => {
                 {fromUserId: loggedInUser._id, status: "accepted"},
                 {toUserId: loggedInUser._id, status: "accepted"}
             ]
-        }).populate("fromUserId",["firstName","lastName","age","gender","about","skills"])
-        .populate("toUserId",["firstName","lastName","age","gender","about","skills"]);
+        }).populate("fromUserId",["firstName","lastName","age","gender","about","skills","photoUrl"])
+        .populate("toUserId",["firstName","lastName","age","gender","about","skills","photoUrl"]);
 
         const formatedConnections = Connections.map(conn => {
             const otherUser = conn.fromUserId._id.equals(loggedInUser._id)
@@ -84,7 +84,7 @@ userRouter.get("/user/feed", userAuth, async(req, res) => {
                 {_id: {$nin: Array.from(hideUsersFromFeed)}},
                 {_id: {$ne: loggedInUser._id}},
             ],
-        }).select(["firstName", "lastName", "age", "gender", "about", "skills"])
+        }).select(["firstName", "lastName", "age", "gender", "about", "skills", "photoUrl", "_id"])
         .skip(skip)
         .limit(limit);
 

@@ -14,7 +14,7 @@ authROuter.post("/signup", async (req, res) => {
         validateSignUpData(req);
 
         // encrypt the password
-        const { firstName, lastName, emailId, password } = req.body;
+        const { firstName, lastName, emailId, password, skills, photoUrl, about } = req.body;
         // check if the email already exsists
         const existingUser = await User.findOne({ emailId });
         if (existingUser) {
@@ -29,11 +29,18 @@ authROuter.post("/signup", async (req, res) => {
             lastName,
             emailId,
             password: hashedPassword,
+            skills,
+            about,
+            photoUrl
         });
-        await user.save();
-        res.send("User created successfully !!");
+        const data = await user.save();
+        const token = await user.getJWT();
+        res.cookie("token", token, {
+            expires: new Date(Date.now() + 8 * 60 * 60 * 1000), // 8 hours
+        });
+        res.json({ message: "User created successfully !!", data:data });
     } catch (err) {
-        res.status(400).send("Error : " + err.message);
+        res.status(400).json({ error: err.message });
     }
 
 });
@@ -61,7 +68,10 @@ authROuter.post("/signin", async (req, res) => {
             // Add the token to cookie and send the response back to the user
             res.cookie("token", token);
 
-            res.status(200).send("login successfull !!");
+            res.json({
+                message: "Login successfull !!",
+                data: existingUser
+            });
         } else {
             res.status(400).send("Invalid credentials");
         }

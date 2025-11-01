@@ -41,7 +41,8 @@ const userSchema = new mongoose.Schema({
         }
     },
     photoUrl: {
-        type: String
+        type: String,
+        default: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Default-welcomer.png/643px-Default-welcomer.png?20180610185859"
     },
     about: {
         type: String,

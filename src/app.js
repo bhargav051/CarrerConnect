@@ -3,11 +3,17 @@ const app = express();
 const connectDB = require("./config/database");
 
 const cookieParser = require('cookie-parser');
+const cors = require("cors");
 
 const PORT = process.env.PORT || 3000;
 
+
 app.use(express.json());  //middleware to read and access json data 
 app.use(cookieParser());  // middleware to read and parse cookies
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+}));  // credentials true to allow browser to store cookie
 
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
