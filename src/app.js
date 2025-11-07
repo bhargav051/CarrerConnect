@@ -1,3 +1,9 @@
+
+// Load environment variables first so all required modules can use them.
+// Explicitly point to the .env in this directory to avoid relying on the current working directory.
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
 const express = require('express');
 const app = express();
 const connectDB = require("./config/database");
@@ -5,7 +11,7 @@ const connectDB = require("./config/database");
 const cookieParser = require('cookie-parser');
 const cors = require("cors");
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 
 app.use(express.json());  //middleware to read and access json data 
