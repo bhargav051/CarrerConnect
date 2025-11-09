@@ -11,6 +11,8 @@ const connectDB = require("./config/database");
 const cookieParser = require('cookie-parser');
 const cors = require("cors");
 
+require('./utils/cronJobs'); // Import cron jobs to start them 
+
 const PORT = process.env.PORT;
 
 

@@ -3,6 +3,7 @@ const { validateSignUpData } = require("../utils/validation");
 const User = require("../models/user");
 const bcrypt = require('bcrypt');
 const validator = require("validator");
+const sendMail = require("../utils/sendMail");
 
 
 const authROuter = express.Router();
@@ -39,6 +40,8 @@ authROuter.post("/signup", async (req, res) => {
             expires: new Date(Date.now() + 8 * 60 * 60 * 1000), // 8 hours
         });
         res.json({ message: "User created successfully !!", data:data });
+        // after user creation send a welcome mail to the user
+        sendMail(emailId, "Welcome to DevTinder", "Thanks for signing up!", "<h1>Welcome to DevTinder</h1><p>Thanks for signing up!</p>");
     } catch (err) {
         res.status(400).json({ error: err.message });
     }

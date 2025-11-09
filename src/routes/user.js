@@ -70,13 +70,14 @@ userRouter.get("/user/feed", userAuth, async(req, res) => {
                 {toUserId: loggedInUser._id},
             ]
         }).select(["fromUserId","toUserId"]);
+        console.log("connectionRequests:", connectionRequests);
 
         // using set datastructure to store unique id's
         const hideUsersFromFeed = new Set();
 
         connectionRequests.forEach((req) => {
-            hideUsersFromFeed.add(req.fromUserId.toString());
-            hideUsersFromFeed.add(req.toUserId.toString());
+            hideUsersFromFeed.add(req.fromUserId?.toString());
+            hideUsersFromFeed.add(req.toUserId?.toString());
         });
 
         const userFeed = await User.find({
@@ -93,7 +94,7 @@ userRouter.get("/user/feed", userAuth, async(req, res) => {
         });
         
     }catch(err){
-        res.status(400).send("Error: "+err.messaege);
+        res.status(400).send("Error: "+err);
     }
 })
 
