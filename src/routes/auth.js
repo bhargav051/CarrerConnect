@@ -37,9 +37,13 @@ authROuter.post("/signup", async (req, res) => {
         const data = await user.save();
         const token = await user.getJWT();
         res.cookie("token", token, {
-            expires: new Date(Date.now() + 8 * 60 * 60 * 1000), // 8 hours
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+            expires: new Date(Date.now() + 8 * 60 * 60 * 1000)
         });
-        res.json({ message: "User created successfully !!", data:data });
+
+        res.json({ message: "User created successfully !!", data: data });
         // after user creation send a welcome mail to the user
         sendMail(emailId, "Welcome to DevTinder", "Thanks for signing up!", "<h1>Welcome to DevTinder</h1><p>Thanks for signing up!</p>");
     } catch (err) {
@@ -69,7 +73,13 @@ authROuter.post("/signin", async (req, res) => {
             console.log(token);
 
             // Add the token to cookie and send the response back to the user
-            res.cookie("token", token);
+            res.cookie("token", token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "none",
+                expires: new Date(Date.now() + 8 * 60 * 60 * 1000)
+            });
+
 
             res.json({
                 message: "Login successfull !!",
@@ -84,10 +94,14 @@ authROuter.post("/signin", async (req, res) => {
 });
 
 
-authROuter.post("/logout", (req,res) => {
+authROuter.post("/logout", (req, res) => {
     res.cookie("token", null, {
-        expires : new Date(Date.now()),
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        expires: new Date(Date.now())
     });
+
     res.send("Logut successfull !!");
 })
 
