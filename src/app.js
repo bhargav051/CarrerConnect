@@ -19,9 +19,13 @@ const PORT = process.env.PORT;
 app.use(express.json());  //middleware to read and access json data 
 app.use(cookieParser());  // middleware to read and parse cookies
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: [
+        "http://localhost:5173",
+        "https://carrer-connect-web.vercel.app"
+    ],
     credentials: true,
-}));  // credentials true to allow browser to store cookie
+}));
+ // credentials true to allow browser to store cookie
 
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
