@@ -40,6 +40,18 @@ const userSchema = new mongoose.Schema({
             }
         }
     },
+    isPremiumUser: {
+        type: Boolean,
+        default: false
+    },
+    membershipPlan: {
+        type: String,
+        enum: ["Free", "Prime", "Boost"],
+        default: "Free"
+    },
+    membershipExpiry: {
+        type: Date,
+    },
     photoUrl: {
         type: String,
         default: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Default-welcomer.png/643px-Default-welcomer.png?20180610185859"
