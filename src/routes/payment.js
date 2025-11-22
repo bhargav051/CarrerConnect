@@ -99,8 +99,8 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
 
         user.membershipExpiry =
             membership === "Prime"
-                ? new Date(Date.now() + 180 * 24 * 60 * 60 * 1000)
-                : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+                ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+                : new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
 
         await user.save();
 
@@ -111,4 +111,13 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
     }
 });
 
+paymentRouter.get("payment/verify", userAuth, (req, res) => {
+    const user = req.user;
+    if(user.isPremiumUser){
+        return res.json({ isPremiumUser: true });
+    }
+    res.json({ isPremiumUser: false });
+});
+
 module.exports = paymentRouter;
+
