@@ -113,13 +113,9 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
             Thank you for choosing DevTinder!
             Best regards,
             DevTinder Team`;
-        const html = `<p>Dear ${payment.notes.firstName},</p>
-            <p>Your payment for the <strong>${membership}</strong> membership has been successfully processed. Your membership is now active.</p>
-            <p>Thank you for choosing DevTinder!</p>
-            <p>Best regards,<br/>
-            DevTinder Team</p>`;
 
-        await sendMail(email, subject, text, html);
+        const mailResponse = await sendMail(email, subject, text, null);
+        console.log("Mail response:", mailResponse);
 
         res.status(200).send("Webhook processed successfully");
 
