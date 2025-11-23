@@ -1,4 +1,3 @@
-// Load .env
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
@@ -12,18 +11,25 @@ require('./utils/cronJobs');
 const PORT = process.env.PORT;
 
 // ----------------------
-// WEBHOOK MUST COME FIRST
+// IMPORT ALL ROUTES FIRST
 // ----------------------
 const paymentRouter = require("./routes/payment");
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
+const userRouter = require("./routes/user");
 
+// ----------------------
+// WEBHOOK FIRST (RAW BODY)
+// ----------------------
 app.use(
   "/payment/webhook",
-  express.raw({ type: "application/json" }),   // raw body ONLY for webhook
+  express.raw({ type: "application/json" }),
   paymentRouter
 );
 
 // ----------------------
-// NORMAL PARSERS
+// NORMAL MIDDLEWARES
 // ----------------------
 app.use(express.json());
 app.use(cookieParser());
@@ -35,18 +41,24 @@ app.use(cors({
     credentials: true,
 }));
 
-// Other Routers
-app.use("/", require("./routes/auth"));
-app.use("/", require("./routes/profile"));
-app.use("/", require("./routes/request"));
-app.use("/", require("./routes/user"));
-app.use("/", paymentRouter);  // other payment routes like /payment/create
+// ----------------------
+// ROUTE MOUNTING
+// ----------------------
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
+app.use("/", userRouter);
+
+// IMPORTANT: Payment router after JSON parsers
+// (excluding webhook which is raw)
+app.use("/", paymentRouter);
 
 // ----------------------
-// START SERVER AFTER DB CONNECTED
+// START SERVER AFTER DB
 // ----------------------
 connectDB().then(() => {
     console.log("Database connected successfully !!");
+
     app.listen(PORT, () => {
         console.log(`Server running on ${PORT}`);
     });
