@@ -7,7 +7,7 @@ const User = require('../models/user');
 const { PAYMENT_PLANS } = require('../utils/constants');
 const { validateWebhookSignature } = require('razorpay/dist/utils/razorpay-utils');
 
-// CREATE ORDER
+// ----------------- CREATE ORDER -----------------
 paymentRouter.post("/payment/create", userAuth, async (req, res) => {
     try {
         const { plan } = req.body;
@@ -16,14 +16,20 @@ paymentRouter.post("/payment/create", userAuth, async (req, res) => {
             return res.status(400).send("Invalid plan selected");
         }
 
+        const { firstName, lastName, emailId } = req.user;
+        const userId = req.user._id;
+
         const amount = PAYMENT_PLANS[plan] * 100;
 
         const order = await razorpayInstance.orders.create({
             amount,
             currency: "INR",
-            receipt: `receipt_${Date.now()}`,
+            receipt: `receipt_order_${Date.now()}`,
             notes: {
-                userId: req.user._id.toString(),
+                userId: userId.toString(),
+                firstName,
+                lastName,
+                email: emailId,
                 membership: plan
             }
         });
@@ -34,7 +40,7 @@ paymentRouter.post("/payment/create", userAuth, async (req, res) => {
             currency: order.currency,
             receipt: order.receipt,
             status: order.status,
-            userId: req.user._id,
+            userId: userId,
             notes: order.notes
         });
 
@@ -50,15 +56,17 @@ paymentRouter.post("/payment/create", userAuth, async (req, res) => {
     }
 });
 
-// WEBHOOK
+// ----------------- WEBHOOK -----------------
 paymentRouter.post("/payment/webhook", async (req, res) => {
     try {
-        const rawBody = req.body.toString('utf8');
-        const signature = req.get("x-razorpay-signature");
+        // RAW BODY BUFFER → convert to string
+        const webhookBody = req.body.toString('utf8');
+        const webhookSignature = req.get("x-razorpay-signature");
 
+        // Verify webhook
         const isValid = validateWebhookSignature(
-            rawBody,
-            signature,
+            webhookBody,
+            webhookSignature,
             process.env.RAZORPAY_WEBHOOK_SECRET
         );
 
@@ -66,7 +74,7 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
             return res.status(400).send("Invalid webhook signature");
         }
 
-        const event = JSON.parse(rawBody);
+        const event = JSON.parse(webhookBody);
 
         if (event.event !== "payment.captured") {
             return res.status(200).send("Ignored event");
@@ -81,6 +89,7 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
         payment.paymentId = paymentInfo.id;
         await payment.save();
 
+        // Update User Premium Status
         const user = await User.findById(payment.userId);
 
         const membership = payment.notes.membership;
@@ -95,16 +104,19 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
 
         await user.save();
 
-        res.status(200).send("Webhook processed");
+        res.status(200).send("Webhook processed successfully");
 
     } catch (err) {
         res.status(500).send("Error: " + err.message);
     }
 });
 
-// VERIFY PREMIUM
 paymentRouter.get("/payment/verify", userAuth, (req, res) => {
-    res.json({ isPremiumUser: req.user.isPremiumUser });
+    const user = req.user;
+    if(user.isPremiumUser){
+        return res.json({ isPremiumUser: true });
+    }
+    res.json({ isPremiumUser: false });
 });
 
 module.exports = paymentRouter;
