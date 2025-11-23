@@ -6,6 +6,7 @@ const Payment = require('../models/payment');
 const User = require('../models/user');
 const { PAYMENT_PLANS } = require('../utils/constants');
 const { validateWebhookSignature } = require('razorpay/dist/utils/razorpay-utils');
+const sendMail = require('../utils/sendMail');
 
 // ----------------- CREATE ORDER -----------------
 paymentRouter.post("/payment/create", userAuth, async (req, res) => {
@@ -104,16 +105,33 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
 
         await user.save();
 
+        // send mail to the user
+        const email = user.emailId;
+        const subject = "Membership Activated!";
+        const text = `Dear ${payment.notes.firstName},
+            Your payment for the ${membership} membership has been successfully processed. Your membership is now active.
+            Thank you for choosing DevTinder!
+            Best regards,
+            DevTinder Team`;
+        const html = `<p>Dear ${payment.notes.firstName},</p>
+            <p>Your payment for the <strong>${membership}</strong> membership has been successfully processed. Your membership is now active.</p>
+            <p>Thank you for choosing DevTinder!</p>
+            <p>Best regards,<br/>
+            DevTinder Team</p>`;
+
+        await sendMail(email, subject, text, html);
+
         res.status(200).send("Webhook processed successfully");
 
     } catch (err) {
         res.status(500).send("Error: " + err.message);
     }
 });
+// ----------------- VERIFY PREMIUM USER -----------------
 
 paymentRouter.get("/payment/verify", userAuth, (req, res) => {
     const user = req.user;
-    if(user.isPremiumUser){
+    if (user.isPremiumUser) {
         return res.json({ isPremiumUser: true });
     }
     res.json({ isPremiumUser: false });
