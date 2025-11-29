@@ -32,7 +32,7 @@ authROuter.post("/signup", async (req, res) => {
             password: hashedPassword,
             skills,
             about,
-            photoUrl
+            photoUrl    
         });
         const data = await user.save();
         const token = await user.getJWT();
@@ -83,7 +83,8 @@ authROuter.post("/signin", async (req, res) => {
 
             res.json({
                 message: "Login successfull !!",
-                data: existingUser
+                data: existingUser,
+                token: token
             });
         } else {
             res.status(400).send("Invalid credentials");

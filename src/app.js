@@ -3,9 +3,11 @@ require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const express = require('express');
 const app = express();
+const http = require('http');
 const connectDB = require("./config/database");
 const cookieParser = require('cookie-parser');
 const cors = require("cors");
+const initializeSocket = require('./utils/socket');
 require('./utils/cronJobs');
 
 const PORT = process.env.PORT;
@@ -46,12 +48,15 @@ app.use(cors({
 // ----------------------
 app.use("/", authRouter);
 app.use("/", profileRouter);
-app.use("/", requestRouter);
+app.use("/", requestRouter);    
 app.use("/", userRouter);
 
 // IMPORTANT: Payment router after JSON parsers
 // (excluding webhook which is raw)
 app.use("/", paymentRouter);
+
+const server = http.createServer(app);
+initializeSocket(server);
 
 // ----------------------
 // START SERVER AFTER DB
@@ -59,7 +64,7 @@ app.use("/", paymentRouter);
 connectDB().then(() => {
     console.log("Database connected successfully !!");
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
         console.log(`Server running on ${PORT}`);
     });
 });
