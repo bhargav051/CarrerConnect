@@ -20,6 +20,7 @@ const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
 const userRouter = require("./routes/user");
+const chatRouter = require('./routes/chat');
 
 // ----------------------
 // WEBHOOK FIRST (RAW BODY)
@@ -50,6 +51,7 @@ app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);    
 app.use("/", userRouter);
+app.use("/", chatRouter);
 
 // IMPORTANT: Payment router after JSON parsers
 // (excluding webhook which is raw)

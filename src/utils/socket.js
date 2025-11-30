@@ -1,6 +1,7 @@
 const socket = require('socket.io');
 const crypto = require('crypto');
 const jwt = require("jsonwebtoken");
+const Chat = require('../models/chat');
 
 const getHashedRoomId = (userId1, userId2) => {
     const sortedIds = [userId1, userId2].sort().join("_");
@@ -20,8 +21,6 @@ const initializeSocket = (server) => {
 
     io.use((socket, next) => {
         const token = socket.handshake.auth.token;
-        console.log("🔐 Verifying socket token:", token);
-
         if (!token) {
             console.log("Socket connection rejected: No token provided");
             return next(new Error("Unauthorized"));
@@ -44,9 +43,27 @@ const initializeSocket = (server) => {
             socket.join(room);
         });
 
-        socket.on("sendMessage", ({ firstName, from, to, text }) => {
-            const room = getHashedRoomId(from, to);
-            io.to(room).emit("messageReceived", { firstName, text });
+        socket.on("sendMessage", async ({ firstName, lastName, from, to, text }) => {
+            try {
+                const room = getHashedRoomId(from, to);
+                // save message to DB
+                let chat = await Chat.findOne({
+                    participants: { $all: [from, to] },
+                });
+                if (!chat) {
+                    const newChat = new Chat({
+                        participants: [from, to],
+                        messages: [{ sender: from, text }]
+                    });
+                    await newChat.save();
+                } else {
+                    chat.messages.push({ sender: from, text });
+                    await chat.save();
+                }
+                io.to(room).emit("messageReceived", { firstName, lastName, from, text });
+            } catch (err) {
+                console.error("Error:", err);
+            }
         });
 
         socket.on("disconnect", () => {

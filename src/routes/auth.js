@@ -84,7 +84,7 @@ authROuter.post("/signin", async (req, res) => {
             res.json({
                 message: "Login successfull !!",
                 data: existingUser,
-                token: token
+                token: token 
             });
         } else {
             res.status(400).send("Invalid credentials");
