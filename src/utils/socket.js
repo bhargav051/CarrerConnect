@@ -2,6 +2,7 @@ const socket = require('socket.io');
 const crypto = require('crypto');
 const jwt = require("jsonwebtoken");
 const Chat = require('../models/chat');
+const ConnectionRequest = require('../models/connectionRequest');
 
 const getHashedRoomId = (userId1, userId2) => {
     const sortedIds = [userId1, userId2].sort().join("_");
@@ -35,7 +36,7 @@ const initializeSocket = (server) => {
             return next(new Error("Unauthorized"));
         }
     })
-
+    
     io.on("connection", (socket) => {
         // handle events
         socket.on("joinChat", ({ userId, targetUserId }) => {
@@ -45,6 +46,19 @@ const initializeSocket = (server) => {
 
         socket.on("sendMessage", async ({ firstName, lastName, from, to, text }) => {
             try {
+                // check if both users are friends
+                const connection = await ConnectionRequest.findOne({
+                    $or: [
+                        { fromUserId: from, toUserId: to, status: "accepted" },
+                        { fromUserId: to, toUserId: from, status: "accepted" }
+                    ]
+                });
+
+                if(!connection){
+                    console.log("Users are not connected. Message not sent.");
+                    return;
+                }
+
                 const room = getHashedRoomId(from, to);
                 // save message to DB
                 let chat = await Chat.findOne({
