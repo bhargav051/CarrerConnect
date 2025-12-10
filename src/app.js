@@ -39,7 +39,7 @@ app.use(cookieParser());
 app.use(cors({
     origin: [
         "http://localhost:5173",
-        "https://carrer-connect-web.vercel.app"
+        "https://career-connect-web.vercel.app"
     ],
     credentials: true,
 }));
