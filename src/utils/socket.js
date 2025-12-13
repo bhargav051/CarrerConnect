@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const jwt = require("jsonwebtoken");
 const Chat = require('../models/chat');
 const ConnectionRequest = require('../models/connectionRequest');
+const User = require('../models/user');
 
 const getHashedRoomId = (userId1, userId2) => {
     const sortedIds = [userId1, userId2].sort().join("_");
@@ -17,10 +18,10 @@ const initializeSocket = (server) => {
                 "https://career-connect-web.vercel.app"
             ],
             credentials: true,
-        },
+        }, 
     });
 
-    io.use((socket, next) => {
+    io.use(async (socket, next) => {
         const token = socket.handshake.auth.token;
         if (!token) {
             console.log("Socket connection rejected: No token provided");
@@ -28,8 +29,15 @@ const initializeSocket = (server) => {
         }
 
         try {
-            const user = jwt.verify(token, process.env.JWT_SECRET);
-            socket.user = user; // store user data in socket
+            const decodedMessage = jwt.verify(token, process.env.JWT_SECRET);
+            console.log("decoded message:", decodedMessage);
+            const userId = decodedMessage._id;
+            socket.userId = userId; // store user data in socket
+            // find the user from DB and set isOnline to true
+            await User.findByIdAndUpdate(userId, {
+                isOnline: true,
+                lastSeen: new Date(),
+            });
             next();
         } catch (err) {
             console.log(err.message);
@@ -43,6 +51,8 @@ const initializeSocket = (server) => {
             const room = getHashedRoomId(userId, targetUserId);
             socket.join(room);
         });
+
+        io.emit("userOnline", socket.userId);
 
         socket.on("sendMessage", async ({ firstName, lastName, from, to, text }) => {
             try {
@@ -80,13 +90,13 @@ const initializeSocket = (server) => {
             }
         });
 
-        socket.on("disconnect", () => {
-            console.log("User disconnected:", socket.user._id);
-            // Handle user disconnection (e.g., remove from rooms)
-            const rooms = Object.keys(socket.rooms);
-            rooms.forEach((room) => {
-                socket.leave(room);
+        socket.on("disconnect", async() => {
+            console.log("User disconnected:", socket.userId);
+            await User.findByIdAndUpdate(socket.userId, {
+                isOnline: false,
+                lastSeen: new Date(),
             });
+            io.emit("userOffline", socket.userId);
         });
     })
 }
